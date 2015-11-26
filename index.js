@@ -9,30 +9,36 @@ var detectCountry = require('./lib/detect-country.js')
 var fetch = require('isomorphic-fetch')
 
 module.exports = function run () {
-  var prevTrack = {}
+  var prevTrack = {};
+  console.log (itunes.playing)
   itunes.on('playing', function (track) {
-    if (isEqualTrack(track, prevTrack)) return
+    var startedTrack = track;
+    setTimeout(function(){
+      itunes.currentTrack(function(playingTrack) {
+        if (isEqualTrack(playingTrack, startedTrack) && itunes.playing) {
+          if (isEqualTrack(playingTrack, prevTrack)) return
+          detectCountry().then(function (country) {
+            findMusic([ track.name, track.artist, track.album ], {
+              country: country
+            }).then(function (music) {
+              if (music) return music
 
-    detectCountry().then(function (country) {
-      findMusic([ track.name, track.artist, track.album ], {
-        country: country
-      }).then(function (music) {
-        if (music) return music
-
-        return findMusic([track.name, track.artist], { country: country })
-      }).then(function (music) {
-        notify(track, music)
-      }).catch(function (err) {
-        console.error(err.stack)
-      })
-    })
-
-    prevTrack = track
-  })
+              return findMusic([track.name, track.artist], { country: country })
+            }).then(function (music) {
+              notify(track, music)
+            }).catch(function (err) {
+              console.error(err.stack)
+            })
+          })
+          prevTrack = track
+        }
+      });
+    }, 20000);
+  });
 }
 
 function isEqualTrack (a, b) {
-  if (!(typeof a === 'object' && typeof b === 'object')) return
+  if (!(a && b)) return
 
   return a.name === b.name && a.artist === b.artist
 }
