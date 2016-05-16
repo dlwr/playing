@@ -1,8 +1,8 @@
 'use strict'
 
 const React = require('react')
-const ipc = require('ipc')
-const shell = require('shell')
+const ReactDOM = require('react-dom')
+const {ipcRenderer, shell} = require('electron')
 const url = require('url')
 
 const App = React.createClass({
@@ -14,11 +14,11 @@ const App = React.createClass({
   },
 
   componentDidMount () {
-    ipc.send('data', this.state)
+    ipcRenderer.send('data', this.state)
   },
 
   componentDidUpdate () {
-    ipc.send('data', this.state)
+    ipcRenderer.send('data', this.state)
   },
 
   inputIsValid () {
@@ -73,7 +73,7 @@ const App = React.createClass({
         React.DOM.button({
           className: 'btn btn-default btn-quit',
           onClick: function () {
-            ipc.send('terminate')
+            ipcRenderer.send('terminate')
           }
         }, 'Quit')
       ])
@@ -81,7 +81,7 @@ const App = React.createClass({
   }
 })
 
-React.render(React.createFactory(App)(), document.body)
+ReactDOM.render(React.createElement(App, null), document.body)
 
 var remote = require('remote')
 var Menu = remote.require('menu')
